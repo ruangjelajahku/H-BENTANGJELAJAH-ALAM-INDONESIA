@@ -692,6 +692,55 @@ Membuat karya, menjelaskan hasil karyanya secara lisan, mengunggah foto karya ke
 <div class="nextrow" id="nx-karyaku"></div>
 </div>
 </section>
+<!-- POJOK KELAS -->
+<section class="pg" id="pg-pojok-kelas" style="--c:#b8dfc0;--on:#214b2c" hidden>
+  <div class="band">
+    <div class="wrap">
+      <div class="tag">🏫</div>
+      <h2>Pojok Kelas</h2>
+      <p>Ruang informasi, kegiatan, dan apresiasi untuk Penjelajah Cilik!</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card">
+      <h3>📢 Pengumuman Kelas</h3>
+      <div id="daftarPengumuman">
+        <p class="note">Informasi pengumuman akan ditampilkan di sini.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗓️ Agenda Kegiatan</h3>
+      <div id="daftarAgenda">
+        <p class="note">Agenda kegiatan akan ditampilkan di sini.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🏆 Papan Skor</h3>
+      <div id="ringkasanSkor">
+        <p class="note">Papan skor akan ditampilkan di sini.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🌟 Apresiasi Penjelajah Cilik</h3>
+      <div id="daftarApresiasi">
+        <p class="note">Apresiasi untuk murid akan ditampilkan di sini.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>✅ Kehadiranku</h3>
+      <div id="statusKehadiran">
+        <p class="note">Isi identitas sebelum memulai pembelajaran.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
 </main>
 
 <footer class="foot"><div class="wrap">
@@ -705,6 +754,13 @@ Pengembang: Awalia Safitri; Gayasal Agisni Putri; Risa Aulia Hermyanti; Riska Se
 const $=s=>document.querySelector(s);
 const P=[
 ['beranda','Beranda','#a9cdf5','#1d3557'],
+['ayo-mulai','D · Dekatkan Pengalaman','#a9cdf5','#1d3557'],
+['hubungkan','H · Hubungkan Kehidupan','#ffd3a3','#4a2c00'],
+['menjelajah','E · Eksplorasi Konkret','#a8e6df','#0d4a46'],
+['diskusi','T · Tukar Gagasan','#c5e8a5','#2c4a12'],
+['ikat','I · Ikat Konsep','#ffb8b5','#5a1a1a'],
+['karyaku','K · Karya dan Refleksi','#cfc9f5','#2b2660']
+];
 ['ayo-mulai','D · Dekatkan Pengalaman','#a9cdf5','#1d3557'],
 ['hubungkan','H · Hubungkan Kehidupan','#ffd3a3','#4a2c00'],
 ['menjelajah','E · Eksplorasi Konkret','#a8e6df','#0d4a46'],
@@ -730,15 +786,17 @@ function burst(el){
     s.animate([{transform:'translate(0,0) scale(.6)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(1.2)`,opacity:0}],{duration:800,easing:'ease-out'}).onfinish=()=>s.remove();
   });
 }
-$('#nav').innerHTML=P.map(p=>`<a href="#${p[0]}" data-p="${p[0]}" style="--c:${p[2]};--on:${p[3]}">${p[1]}</a>`).join('');
+$('#nav').innerHTML=P.map(p=>`<a href="#${p[0]}" data-p="${p[0]}" style="--c:${p[2]};--on:${p[3]}">${p[1]}</a>`).join('')+
+`<a href="#pojok-kelas" data-p="pojok-kelas" style="--c:#b8dfc0;--on:#214b2c">🏫 Pojok Kelas</a>`;
 $('#path').innerHTML=P.slice(1).map((p,i)=>`<a class="dot" href="#${p[0]}" style="--c:${p[2]};--on:${p[3]}"><i>${L[i]}</i><span>${p[1].split(' · ')[1]}</span></a>`).join('');
+
 P.slice(1).forEach((p,i)=>{
   const prev=P[i],next=P[i+2];
   $('#nx-'+p[0]).innerHTML=`<a class="btn" style="--c:#dde4ec;--on:#2d3b4a" href="#${prev[0]}">← Kembali</a>`+(next?`<a class="btn" style="--c:${next[2]};--on:${next[3]}" href="#${next[0]}">Lanjut ke ${next[1].split(' · ').pop()} →</a>`:`<a class="btn" style="--c:#a9cdf5;--on:#1d3557" href="#beranda">Ke Beranda 🏠</a>`);
 });
 function route(x){
   const h=x||(location.hash||'#beranda').slice(1);
-  const id=P.some(p=>p[0]===h)?h:'beranda';
+  const id=P.some(p=>p[0]===h)||h==='pojok-kelas'?h:'beranda';
   document.querySelectorAll('.pg').forEach(s=>s.hidden=s.id!=='pg-'+id);
   document.querySelectorAll('#nav a').forEach(a=>{a.toggleAttribute('aria-current',a.dataset.p===id);if(a.dataset.p===id){a.setAttribute('aria-current','page');a.scrollIntoView({inline:'center',block:'nearest'})}});
   window.scrollTo(0,0);
@@ -1011,6 +1069,21 @@ identityForm.addEventListener('submit', function(e){
   };
 
   sessionStorage.setItem('identitasMurid', JSON.stringify(identitas));
+
+  // MENCATAT KEHADIRAN OTOMATIS
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      aksi: 'kehadiran',
+      nama: nama,
+      kelas: kelas
+    })
+  });
+
   sembunyikanIdentitas();
 });
 
@@ -1028,83 +1101,72 @@ if(sessionStorage.getItem('identitasMurid')){
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKWar0qFR5W6t3rxUK5mYpE8wqR8T0_8csgSp47JSzVko1mY9w2OeoOR2apyo2UmqoOg/exec';
 
+// IDENTITAS MURID
 function ambilIdentitas(){
-  const data = JSON.parse(
-    sessionStorage.getItem('identitasMurid') || 'null'
-  );
-
-  if(!data || !data.nama || !data.kelas){
+  const data=JSON.parse(sessionStorage.getItem('identitasMurid')||'null');
+  if(!data||!data.nama||!data.kelas){
     alert('Silakan isi nama dan kelas terlebih dahulu.');
     return null;
   }
-
   return data;
 }
 
+// KIRIM DATA
 function kirimData(bagian,jawaban,statusId,tombolId){
+  const status=document.getElementById(statusId);
+  const tombol=document.getElementById(tombolId);
+  const identitas=ambilIdentitas();
+  if(!identitas)return;
 
-  const status = document.getElementById(statusId);
-  const tombol = document.getElementById(tombolId);
-  const identitas = ambilIdentitas();
+  tombol.disabled=true;
+  status.textContent='Mengirim jawaban...';
 
-  if(!identitas) return;
-
-  tombol.disabled = true;
-  status.textContent = 'Mengirim jawaban...';
-
-  const data = {
-    nama: identitas.nama,
-    kelas: identitas.kelas,
-    bagian: bagian,
-    jawaban: jawaban
+  const data={
+    nama:identitas.nama,
+    kelas:identitas.kelas,
+    bagian:bagian,
+    jawaban:jawaban
   };
 
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8'
-    },
-    body: JSON.stringify(data)
+  fetch(SCRIPT_URL,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(data)
   })
-  .then(() => {
-    status.textContent = 'Jawaban sudah dikirim. 😊';
-    tombol.disabled = false;
+  .then(()=>{
+    status.textContent='Permintaan pengiriman telah dikirim.';
+    tombol.disabled=false;
   })
-  .catch(error => {
-    status.textContent = 'Pengiriman gagal. Coba lagi.';
+  .catch(error=>{
+    status.textContent='Pengiriman gagal. Coba lagi.';
     console.error(error);
-    tombol.disabled = false;
+    tombol.disabled=false;
   });
 }
 
-// KIRIM JAWABAN BAGIAN H
+// BAGIAN H
 document.getElementById('kirimH').addEventListener('click',()=>{
-  const pengalaman = document.getElementById('pengalaman').value.trim();
-  const kegiatan = document.getElementById('kegiatan').value.trim();
+  const pengalaman=$('#pengalaman').value.trim();
+  const kegiatan=$('#kegiatan').value.trim();
 
-  if(!pengalaman || !kegiatan){
+  if(!pengalaman||!kegiatan){
     alert('Lengkapi kedua jawaban terlebih dahulu.');
     return;
   }
 
-  kirimData(
-    'H',
-    [pengalaman, kegiatan],
-    'statusH',
-    'kirimH'
-  );
+  kirimData('H',[pengalaman,kegiatan],'statusH','kirimH');
 });
 
-// KIRIM JAWABAN BAGIAN E
+// BAGIAN E
 document.getElementById('kirimE').addEventListener('click',()=>{
   const jawabanMatch=M.map((m,i)=>$('#m'+i).value);
   const jawabanSort=S.map((s,i)=>
-    document.querySelector(`#sort .opt[data-i="${i}"][aria-pressed="true"]`)?.dataset.v || ''
+    document.querySelector(`#sort .opt[data-i="${i}"][aria-pressed="true"]`)?.dataset.v||''
   );
 
-  if(jawabanMatch.some(x=>!x) || jawabanSort.some(x=>!x)){
-    alert('Lengkapi semua jawaban Permainan 1 dan Permainan 2 terlebih dahulu.');
+  if(jawabanMatch.some(x=>!x)||jawabanSort.some(x=>!x)){
+    alert('Lengkapi semua jawaban terlebih dahulu.');
     return;
   }
 
@@ -1119,7 +1181,7 @@ document.getElementById('kirimE').addEventListener('click',()=>{
   ],'statusE','kirimE');
 });
 
-// KIRIM JAWABAN BAGIAN T
+// BAGIAN T
 document.getElementById('kirimT').addEventListener('click',()=>{
   const jawaban=[
     document.querySelector('[aria-label="Alasan gunung"]').value.trim(),
@@ -1131,20 +1193,21 @@ document.getElementById('kirimT').addEventListener('click',()=>{
   ];
 
   if(jawaban.some(x=>!x)){
-    alert('Lengkapi semua jawaban kegiatan terlebih dahulu.');
+    alert('Lengkapi semua jawaban terlebih dahulu.');
     return;
   }
 
   kirimData('T',jawaban,'statusT','kirimT');
 });
 
-// KIRIM JAWABAN BAGIAN I
+// BAGIAN I
 document.getElementById('kirimI').addEventListener('click',()=>{
   const jawaban=[];
 
   for(let i=0;i<Q.length;i++){
     const grup=[...document.querySelectorAll(`#quiz .opt[data-q="${i}"]`)];
-    const pilihan=grup.find(x=>x.classList.contains('wrong')) || grup.find(x=>x.classList.contains('right'));
+    const pilihan=grup.find(x=>x.classList.contains('wrong'))||
+                  grup.find(x=>x.classList.contains('right'));
 
     if(!pilihan){
       alert('Jawab semua soal kuis terlebih dahulu.');
@@ -1155,25 +1218,228 @@ document.getElementById('kirimI').addEventListener('click',()=>{
   }
 
   jawaban.push(`${sk}/${Q.length}`);
-
   kirimData('I',jawaban,'statusI','kirimI');
 });
 
-// KIRIM REFLEKSI BAGIAN K
+// REFLEKSI K
 document.getElementById('kirimK').addEventListener('click',()=>{
-  const jawaban=[
-    $('#r1').value.trim(),
-    $('#rasa').value,
-    $('#r3').value.trim()
-  ];
+  const jawaban=[$('#r1').value.trim(),$('#rasa').value,$('#r3').value.trim()];
 
-  if(!jawaban[0] || !jawaban[2]){
+  if(!jawaban[0]||!jawaban[2]){
     alert('Lengkapi refleksi terlebih dahulu.');
     return;
   }
 
   kirimData('R',jawaban,'statusK','kirimK');
 });
+
+
+// =====================================
+// POJOK KELAS
+// =====================================
+
+function aman(teks){
+  return String(teks??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+// MEMANGGIL FUNGSI APPS SCRIPT
+function panggilServer(namaFungsi,data,callback){
+  if(!window.google || !google.script || !google.script.run){
+    alert('Buka website melalui URL Web App Apps Script.');
+    return;
+  }
+
+  let runner=google.script.run
+    .withSuccessHandler(hasil=>{
+      if(callback) callback(hasil);
+    })
+    .withFailureHandler(error=>{
+      console.error(error);
+      alert('Gagal mengakses data: '+error.message);
+    });
+
+  if(data===undefined){
+    runner[namaFungsi]();
+  }else{
+    runner[namaFungsi](data);
+  }
+}
+
+// MENAMPILKAN PENGUMUMAN
+function muatPengumuman(){
+  panggilServer('ambilPengumuman',undefined,hasil=>{
+    const wadah=$('#daftarPengumuman');
+    if(!wadah)return;
+
+    wadah.innerHTML=hasil.status==='success'&&hasil.data.length
+      ?hasil.data.map(r=>`
+        <article class="card">
+          <h3>📢 ${aman(r[2])}</h3>
+          <p>${aman(r[3])}</p>
+        </article>`).join('')
+      :'<p>Belum ada pengumuman.</p>';
+  });
+}
+
+// MENAMPILKAN AGENDA
+function muatAgenda(){
+  panggilServer('ambilAgenda',undefined,hasil=>{
+    const wadah=$('#daftarAgenda');
+    if(!wadah)return;
+
+    wadah.innerHTML=hasil.status==='success'&&hasil.data.length
+      ?hasil.data.map(r=>`
+        <article class="card">
+          <h3>📅 ${aman(r[2])}</h3>
+          <p>${aman(r[1])}</p>
+          <p>${aman(r[3])}</p>
+        </article>`).join('')
+      :'<p>Belum ada agenda.</p>';
+  });
+}
+
+// MENAMPILKAN PAPAN SKOR
+function muatSkor(){
+  panggilServer('ambilPapanSkor',undefined,hasil=>{
+    const wadah=$('#ringkasanSkor');
+    if(!wadah)return;
+
+    wadah.innerHTML=hasil.status==='success'&&hasil.data.length
+      ?hasil.data.map((r,i)=>`
+        <article class="card">
+          <h3>🏆 ${i+1}. ${aman(r.nama)}</h3>
+          <p>Kelas ${aman(r.kelas)} · Skor ${aman(r.skor)}</p>
+        </article>`).join('')
+      :'<p>Belum ada skor.</p>';
+  });
+}
+
+// MENAMPILKAN APRESIASI
+function muatApresiasi(){
+  panggilServer('ambilApresiasi',undefined,hasil=>{
+    const wadah=$('#daftarApresiasi');
+    if(!wadah)return;
+
+    wadah.innerHTML=hasil.status==='success'&&hasil.data.length
+      ?hasil.data.map(r=>`
+        <article class="card">
+          <h3>🌟 ${aman(r[1])} · Kelas ${aman(r[2])}</h3>
+          <p>${aman(r[3])}</p>
+        </article>`).join('')
+      :'<p>Belum ada apresiasi.</p>';
+  });
+}
+
+// FORM KHUSUS GURU
+function buatPanelGuru(){
+  const halaman=$('#pg-pojok-kelas');
+  if(!halaman||$('#panelGuru'))return;
+
+  const panel=document.createElement('div');
+  panel.id='panelGuru';
+  panel.className='wrap';
+  panel.innerHTML=`
+    <div class="card">
+      <h2>🧑‍🏫 Panel Guru</h2>
+      <p>Fitur pengelolaan Pojok Kelas.</p>
+
+      <h3>📢 Tambah Pengumuman</h3>
+      <form id="formPengumuman">
+        <input id="judulPengumuman" placeholder="Judul pengumuman" required>
+        <textarea id="isiPengumuman" placeholder="Isi pengumuman" required></textarea>
+        <button class="btn" type="submit">Simpan Pengumuman</button>
+      </form>
+
+      <hr>
+
+      <h3>📅 Tambah Agenda</h3>
+      <form id="formAgenda">
+        <input id="tanggalAgenda" type="date" required>
+        <input id="namaAgenda" placeholder="Nama agenda" required>
+        <textarea id="keteranganAgenda" placeholder="Keterangan agenda"></textarea>
+        <button class="btn" type="submit">Simpan Agenda</button>
+      </form>
+
+      <hr>
+
+      <h3>🌟 Tambah Apresiasi</h3>
+      <form id="formApresiasi">
+        <input id="namaApresiasi" placeholder="Nama murid" required>
+        <input id="kelasApresiasi" placeholder="Kelas" required>
+        <textarea id="pesanApresiasi" placeholder="Pesan apresiasi" required></textarea>
+        <button class="btn" type="submit">Simpan Apresiasi</button>
+      </form>
+    </div>
+  `;
+
+  halaman.appendChild(panel);
+
+  $('#formPengumuman').addEventListener('submit',e=>{
+    e.preventDefault();
+    panggilServer('tambahPengumuman',{
+      judul:$('#judulPengumuman').value.trim(),
+      isi:$('#isiPengumuman').value.trim()
+    },hasil=>{
+      alert(hasil.message);
+      if(hasil.status==='success'){
+        e.target.reset();
+        muatPengumuman();
+      }
+    });
+  });
+
+  $('#formAgenda').addEventListener('submit',e=>{
+    e.preventDefault();
+    panggilServer('tambahAgenda',{
+      tanggal:$('#tanggalAgenda').value,
+      namaAgenda:$('#namaAgenda').value.trim(),
+      keterangan:$('#keteranganAgenda').value.trim()
+    },hasil=>{
+      alert(hasil.message);
+      if(hasil.status==='success'){
+        e.target.reset();
+        muatAgenda();
+      }
+    });
+  });
+
+  $('#formApresiasi').addEventListener('submit',e=>{
+    e.preventDefault();
+    panggilServer('tambahApresiasi',{
+      nama:$('#namaApresiasi').value.trim(),
+      kelas:$('#kelasApresiasi').value.trim(),
+      pesan:$('#pesanApresiasi').value.trim()
+    },hasil=>{
+      alert(hasil.message);
+      if(hasil.status==='success'){
+        e.target.reset();
+        muatApresiasi();
+      }
+    });
+  });
+}
+
+// MEMUAT SEMUA FITUR POJOK KELAS
+function muatPojokKelas(){
+  buatPanelGuru();
+  muatPengumuman();
+  muatAgenda();
+  muatSkor();
+  muatApresiasi();
+}
+
+// DETEKSI PERPINDAHAN HALAMAN
+window.addEventListener('hashchange',()=>{
+  if(location.hash==='#pojok-kelas'){
+    muatPojokKelas();
+  }
+});
+
+if(location.hash==='#pojok-kelas'){
+  muatPojokKelas();
+}
 
 </script>
 </body>
